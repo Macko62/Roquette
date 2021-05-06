@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class='application'>
+        <style> 
+            .flashing{
+                animation: animateFlashing {{settings.flashPeriod}}s linear infinite;
+            }
+            @keyframes animateFlashing{
+                0%{opacity:0;}
+                50%{opacity:1;}
+                100%{opacity:0;}
+            }
+        </style>
+        <div class='vpadding'></div>
+        <form method='POST'> {% csrf_token %}
+            <table cellpadding="5px">
+                <tr>
+                    {% for field in form %}
+                        {% if field.name == "msgNum" %}
+                            <td>{{field.label}}</td>
+                            <td>
+                                <input type="number" name="{{field.name}}" id="{{field.id}}" min="1" max="16" oninput="fillMessageData(this.value)"></input>
+                            </td>                 
+                        {% elif field.name == "tuNumExt" %}
+                            <td>{{field.label}}</td>
+                            <td>{{field}}</td>  
+                        {% elif field.name == "door" %}
+                            <td>{{field.label}}</td>
+                            <td>{{field}}</td>
+                        {% endif %}
+                    {% endfor %}
+                <tr>
+                    {% for field in form %}
+                        {% if field.name == "textColor" %}
+                    <td>{{field.label}}</td>
+                    <td>
+                        <input style="width:100%;" type='color' id='textColorPicker' oninput='getTextColorValue(this.value)' value={{field.value}}></input>
+                    </td>
+                    <td colspan="4">{{field}}</td>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+                {% for field in form %}
+                <tr>
+                    {% if field.name == "userOverride" %}
+                    <td colspan="3">{{field.label}}</td>
+                    <td colspan="3">{{field}}</td>
+                    {% elif field.name == "textColorOverride" %}
+                    <td colspan="3">{{field.label}}</td>
+                    <td colspan="3">{{field}}</td>
+                    {% elif field.name == "isFlashing" %}
+                    <td colspan="3">{{field.label}}</td>
+                    <td colspan="3">{{field}}</td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+                <tr><td colspan="6"><input type='submit' value='Save' /></td></tr>
+            </table>
+        </form>
+        <div class='vpadding'></div>
+        <div class='vpadding'></div>
+        <div class="table-wrapper">
+            <table style="width:1000px;">
+                <tr>
+                    <td class='headRow' style="width:200px;">Message #</td>
+                    <td class='headRow' style="width:650px;">Truck #</td>
+                    <td class='headRow' style="width:150px;">Door</td>
+                </tr>
+                {% for instance in object_list %} 
+                    {% if instance.tuNumExt != 'null' %}
+                <tr>
+                    <td class='msgNumColumn'>{{ instance.msgNum }}</td>
+                        {% if instance.door != '' %}   
+                    <td class='tuNumColumn' style="text-align:left;" id="msg{{instance.msgNum}}TuNumExt">{{ instance.tuNumExt }}</td>
+                    <td class='doorColumn' id="msg{{instance.msgNum}}Door">{{ instance.door }}</td>
+                        {% else %}
+                    <td class='tuNumColumn' colspan="2" style="text-align:left;" id="msg{{instance.msgNum}}TuNumExt">{{ instance.tuNumExt }}</td>
+                        {% endif %}
+                </tr>
+                    {% endif %}
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+    <script>
+        function fillMessageData(value){
+            if (value >= 1 && value <= messages.length){
+                document.getElementById("id_tuNumExt").value = messages[value-1]["tuNumExt"];
+                document.getElementById("id_door").value = messages[value-1]["door"];
+                document.getElementById("textColorPicker").value = messages[value-1]["textColor"];
+                document.getElementById("id_textColor").value = messages[value-1]["textColor"];
+                document.getElementById("id_userOverride").checked = messages[value-1]["userOverride"];
+                document.getElementById("id_textColorOverride").checked = messages[value-1]["textColorOverride"];
+                document.getElementById("id_isFlashing").checked = messages[value-1]["isFlashing"];
+            }else{
+                document.getElementById("id_tuNumExt").value = '';
+                document.getElementById("id_door").value = '';
+                document.getElementById("textColorPicker").value = '#ffffff';
+                document.getElementById("id_textColor").value = '#ffffff';
+                document.getElementById("id_userOverride").checked = false;
+                document.getElementById("id_textColorOverride").checked = false;
+                document.getElementById("id_isFlashing").checked = false;
+            }
+        }
+        function getTextColorValue(value){
+            document.getElementById('id_textColor').value = value;
+        }
+        messages=JSON.parse('{{as_json|escapejs}}');
+        for (var i=0; i<messages.length; i++){
+            var msgNum = messages[i]["msgNum"];
+            var textColor = messages[i]["textColor"];
+            var overrideColor = messages[i]["textColorOverride"];
+            var isFlashing = messages[i]["isFlashing"];
+            var userOverride = messages[i]["userOverride"];
+            if (overrideColor){
+                document.getElementById("msg"+msgNum+"TuNumExt").style.color = textColor;
+                if (!userOverride){
+                    document.getElementById("msg"+msgNum+"Door").style.color = textColor;
+                }
+            }
+            if (isFlashing){
+                document.getElementById("msg"+msgNum+"TuNumExt").classList.add("flashing");
+                document.getElementById("msg"+msgNum+"Door").classList.add("flashing");
+            }
+        }
+    </script>
+{% endblock content %}

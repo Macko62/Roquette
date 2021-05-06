@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    
+    <div class='application'>
+        <div class='vpadding'></div>
+         <form method='POST'> {% csrf_token %}
+            <table>
+                {% for field in form %}
+                    {% if field.html_name == "bgColor"  %}
+                        <tr>
+                            <td>{{field.label}}</td>
+                            <td>
+                                <input type='color' id='bgColorPicker' oninput='getBgValue(this.value)' value={{field.value}}></input>
+                            </td>
+                            <td>{{field}}</td>
+                        </tr>
+                    {% elif field.html_name == "textColor" %}
+                        <td>{{field.label}}</td>
+                        <td>
+                            <input type='color' id='bgColorPicker' oninput='getTextValue(this.value)' value={{field.value}}></input>
+                        </td>
+                        <td>{{field}}</td>
+                    {% else %}
+                        <tr>
+                            <td>{{field.label}}</td>
+                            <td colspan='2'>{{field}}</td>
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+            </table>         
+            <p><input type='submit' value='Save' /></p>
+        </form>
+        {% if updated %}
+            <p> Settings Updated Successfully </p>
+        {% endif %}
+    </div>
+    <script>
+        function getBgValue(value){
+            document.getElementById('id_bgColor').value = value;
+        }
+        function getTextValue(value){
+            document.getElementById('id_textColor').value = value;
+        }
+    </script>
+{% endblock content %}
